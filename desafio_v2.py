@@ -21,7 +21,7 @@ LIMITE_SAQUES = 3
 
 mascara_ptbr = "%d/%m/%Y %H : %M"
 
-def deposito (valor, conta_in): 
+def deposito (valor, conta_in, /): 
 
    contas_filtradas = [conta for conta in contas if conta["numero"] == conta_in]
    
@@ -43,7 +43,7 @@ def deposito (valor, conta_in):
        print("Operação falhou! Conta informada é inválida.")
             
      
-def saque (valor, conta_in):
+def saque (*, valor, conta_in):
        
     contas_filtradas = [conta for conta in contas if conta["numero"] == conta_in]
    

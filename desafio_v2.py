@@ -1,96 +1,156 @@
-from datetime import date, datetime, timedelta
 
 menu = """
 
-[d] Depositar
-[s] Sacar
-[e] Extrato
-[q] Sair
+[d]  Depositar
+[s]  Sacar
+[e]  Extrato
+[nc] Novo cliente
+[cb] Nova conta bancaria
+[q]  Sair
 
 => """
 
 saldo = 0
-limite = 500
-numero_saques = 0
-numero_transacao = 0
+LIMITE = 500
 
-datas = []
-tipo_transacao = []
-valor_transacao = []
+usuarios = []
+contas = []
 
 LIMITE_SAQUES = 3
-LIMITE_TRANSACAO = 10
+#LIMITE_TRANSACAO = 10
 
 mascara_ptbr = "%d/%m/%Y %H : %M"
 
+def deposito (valor, conta_in): 
+
+   contas_filtradas = [conta for conta in contas if conta["numero"] == conta_in]
+   
+   indices = [i for i, conta in enumerate(contas) if conta["numero"] == conta_in]
+   index = indices[0] if indices else -1
+   
+   if contas_filtradas:
+            
+        if valor > 0:
+            
+            contas[index]["saldo"] += valor
+            contas[index]["extrato"] += (f"Deposito:\tR$ {valor:.2f}\n")
+            
+            print("Deposito realizado com sucesso.")
+
+        else:
+            print("Operação falhou! O valor informado é inválido.")
+   else:
+       print("Operação falhou! Conta informada é inválida.")
+            
+     
+def saque (valor, conta_in):
+       
+    contas_filtradas = [conta for conta in contas if conta["numero"] == conta_in]
+   
+    indices = [i for i, conta in enumerate(contas) if conta["numero"] == conta_in]
+    index = indices[0] if indices else -1
+    
+    if contas_filtradas:
+
+        if valor > contas[index]["saldo"]:
+            print("Operação falhou! Você não tem saldo suficiente.")
+
+        elif valor > LIMITE:
+            print("Operação falhou! O valor do saque excede o limite.")
+
+        elif contas[index]["numero_saques"] >= LIMITE_SAQUES:
+            print("Operação falhou! Número máximo de saques excedido.")
+            
+
+        elif valor > 0:
+            
+            contas[index]["saldo"] -= valor
+            contas[index]["numero_saques"] += 1
+            contas[index]["extrato"] += (f"Saque:\t\tR$ {valor:.2f}\n")
+            
+            print("Saque realizado com sucesso.")
+
+        else:
+            print("Operação falhou! O valor informado é inválido.")
+    else:
+       print("Operação falhou! Conta informada é inválida.")
+
+def extrato (conta_in): 
+    
+   contas_filtradas = [conta for conta in contas if conta["numero"] == conta_in]
+   
+   indices = [i for i, conta in enumerate(contas) if conta["numero"] == conta_in]
+   index = indices[0] if indices else -1
+   
+   if contas_filtradas:
+       
+       print("\n================ EXTRATO ================")
+       print("Não foram realizadas movimentações." if contas[index]["extrato"] == "" else contas[index]["extrato"])
+       saldo_atual = contas[index]["saldo"]
+       print(f"\nSaldo:\t\tR$ {saldo_atual:.2f}")
+       print("==========================================")
+
+   else:
+       print("Operação falhou! Conta informada é inválida.")
+
+def novo_cliente():
+    cpf = input("Informe o CPF (somente número): ")
+    
+    usuario = [usuario for usuario in usuarios if usuario["cpf"] == cpf]
+
+    if usuario:
+        print("\n@@@ Já existe usuário com esse CPF! @@@")
+        return
+    else:
+        nome = input("Informe o nome completo: ")
+        data_nascimento = input("Informe a data de nascimento (dd-mm-aaaa): ")
+        endereco = input("Informe o endereço (logradouro, nro - bairro - cidade/sigla estado): ")
+
+        usuarios.append({"nome": nome, "data_nascimento": data_nascimento, "cpf": cpf, "endereco": endereco})
+
+        print("=== Usuário criado com sucesso! ===")
+
+    
+def nova_conta():
+    cpf = input("Informe o CPF (somente número): ")
+    
+    usuario = [usuario for usuario in usuarios if usuario["cpf"] == cpf]
+    
+    if usuario:
+        numero = len(contas)+1
+    
+        contas.append({"agencia": 1, "numero": numero, "usuario":usuario, "saldo":0, "numero_saques":0, "extrato": ""})
+    
+        print(f"=== Conta bancaria nº {numero} criada com sucesso! ===")
+
+    else:
+        print("Erro! Usuário nao encontrado")
+        
+        
 while True:
 
     opcao = input(menu)
-
-    if opcao == "d":
-        valor = float(input("Informe o valor do depósito: "))
-
-        if numero_transacao >= LIMITE_TRANSACAO:                     #excedeu_saques = numero_saques >= LIMITE_TRANSAÇÃO
-            print("Operação falhou! Número máximo de transações excedido.")
-            
-        elif valor >0:
-            saldo += valor
-            print("Saque realizado com sucesso.")
-            
-            data = datetime.now()
-            numero_transacao += 1
-            
-            datas.append(data.strftime(mascara_ptbr))
-            tipo_transacao.append("+")
-            valor_transacao.append(f'{valor:.2f}')
-
-        else:
-            print("Operação falhou! O valor informado é inválido.")
-
-    elif opcao == "s":
-        valor = float(input("Informe o valor do saque: "))
-
-        if valor > saldo:                                              #excedeu_saldo = valor > saldo
-            print("Operação falhou! Você não tem saldo suficiente.")
-
-        elif valor >limite:                                            #excedeu_limite = valor > limite
-            print("Operação falhou! O valor do saque excede o limite.")
-
-        elif numero_saques >= LIMITE_SAQUES:                           #excedeu_saques = numero_saques >= LIMITE_SAQUES
-            print("Operação falhou! Número máximo de saques excedido.")
-            
-        elif numero_transacao >= LIMITE_TRANSACAO:                     #excedeu_saques = numero_saques >= LIMITE_TRANSAÇÃO
-            print("Operação falhou! Número máximo de transações excedido.")
-
-        elif valor > 0:
-            saldo -= valor
-            print("Saque realizado com sucesso.")
-
-            data = datetime.now()
-            numero_saques += 1
-            numero_transacao += 1
-            
-            datas.append(data.strftime(mascara_ptbr))
-            tipo_transacao.append("-")
-            valor_transacao.append(f'{valor:.2f}')
-
-        else:
-            print("Operação falhou! O valor informado é inválido.")
-
-    elif opcao == "e":
-        print("\n================ EXTRATO ================")
+    
+    if opcao =="d":
+        conta_in = input("Informe a conta: ")
+        valor = input("Informe o valor de deposito: ")
+        deposito(int(valor), int(conta_in))              #positional only
         
-        if len(datas) == 0:
-            print("Não foram realizadas movimentações.")
-        else:
-            for movimentacao in range(len(datas)):
-                print(f"{datas[movimentacao]}       {tipo_transacao[movimentacao]}  R$ {valor_transacao[movimentacao]}\n")
-
-        print("==========================================")
+    elif opcao =="s":
+        conta_in = input("Informe a conta: ")
+        valor = input("Informe o valor de saque: ")
+        saque(valor=int(valor), conta_in=int(conta_in))  #keyword only
         
-    elif opcao == "q":
+    elif opcao =="e":
+        conta_in = input("Informe a conta: ")
+        extrato(int(conta_in))
+        
+    elif opcao == "nc":
+        novo_cliente()
+        
+    elif opcao =="cb":
+        nova_conta()
+        
+    else:
         print("Obrigado pela sua preferência. Volte sempre!")
         break
-
-    else:
-        print("Operação inválida, por favor selecione novamente a operação desejada.")
